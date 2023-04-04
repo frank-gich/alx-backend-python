@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# countasync.py
 
 import random
 import asyncio
