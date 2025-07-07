@@ -31,3 +31,4 @@ def batch_processing(batch_size):
         for user in batch:
             if user.get('age', 0) > 25:  # Safer access
                 print(user)  # ✅ Actually print the user
+                #return
