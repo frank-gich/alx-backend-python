@@ -1,10 +1,11 @@
 import sqlite3
 import functools
-import datetime  # ✅ Allowed import
+from datetime import datetime
 
 def log_queries(func):
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
+        # Extract the SQL query string from args or kwargs
         query = kwargs.get("query") or (args[0] if args else "")
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         print(f"[{timestamp}] Executing SQL Query: {query}")
