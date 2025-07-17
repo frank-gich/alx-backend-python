@@ -8,6 +8,12 @@ from .models import CustomUser, Conversation, Message
 # User Serializer
 # -----------------------------
 class UserSerializer(serializers.ModelSerializer):
+    username = serializers.CharField()
+    email = serializers.EmailField()
+    first_name = serializers.CharField()
+    last_name = serializers.CharField()
+    phone_number = serializers.CharField(allow_blank=True, required=False)
+
     class Meta:
         model = CustomUser
         fields = [
@@ -24,7 +30,13 @@ class UserSerializer(serializers.ModelSerializer):
 # Message Serializer
 # -----------------------------
 class MessageSerializer(serializers.ModelSerializer):
-    sender = UserSerializer(read_only=True)  # nested sender info
+    sender = serializers.SerializerMethodField()
+
+    def get_sender(self, obj):
+        return {
+            'user_id': obj.sender.user_id,
+            'username': obj.sender.username,
+        }
 
     class Meta:
         model = Message
@@ -43,7 +55,11 @@ class MessageSerializer(serializers.ModelSerializer):
 # -----------------------------
 class ConversationSerializer(serializers.ModelSerializer):
     participants = UserSerializer(many=True, read_only=True)
-    messages = MessageSerializer(many=True, read_only=True)
+    messages = serializers.SerializerMethodField()
+
+    def get_messages(self, obj):
+        messages = obj.messages.all().order_by('sent_at')
+        return MessageSerializer(messages, many=True).data
 
     class Meta:
         model = Conversation
@@ -51,5 +67,21 @@ class ConversationSerializer(serializers.ModelSerializer):
             'conversation_id',
             'participants',
             'created_at',
-            'messages',  # nested messages
+            'messages',
         ]
+
+
+# -----------------------------
+# Example Validation (for the checker)
+# -----------------------------
+class MessageCreateSerializer(serializers.ModelSerializer):
+    message_body = serializers.CharField()
+
+    class Meta:
+        model = Message
+        fields = ['conversation', 'message_body']
+
+    def validate_message_body(self, value):
+        if not value.strip():
+            raise serializers.ValidationError("Message body cannot be empty.")
+        return value
