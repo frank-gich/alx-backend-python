@@ -64,7 +64,6 @@ class TestGithubOrgClient(unittest.TestCase):
         """Test has_license returns True if license matches"""
         self.assertEqual(GithubOrgClient.has_license(repo, license_key), expected)
 
-
 @parameterized_class([
     {
         "org_payload": org_payload,
@@ -108,7 +107,3 @@ class TestIntegrationGithubOrgClient(unittest.TestCase):
             client.public_repos(license="apache-2.0"),
             self.apache2_repos
         )
-
-
-if __name__ == "__main__":
-    unittest.main()
