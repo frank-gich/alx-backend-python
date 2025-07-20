@@ -98,14 +98,10 @@ class TestGithubOrgClient(unittest.TestCase):
         )
 
 
-@parameterized_class([
-    {
-        "org_payload": org_payload,
-        "repos_payload": repos_payload,
-        "expected_repos": expected_repos,
-        "apache2_repos": apache2_repos,
-    }
-]), class_name_func=lambda cls, _, index: f"{cls.__name__}_{index}")
+@parameterized_class(
+        ("org_payload", "repos_payload", "expected_repos", "apache2_repos",),
+        TEST_PAYLOAD
+)
 class TestIntegrationGithubOrgClient(unittest.TestCase):
     """Integration tests for GithubOrgClient.public_repos"""
 
