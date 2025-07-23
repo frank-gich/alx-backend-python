@@ -88,7 +88,7 @@ class TestGithubOrgClient(unittest.TestCase):
 
     @parameterized.expand([
         ({"license": {"key": "my_license"}}, "my_license", True),
-        ({"license": {"key": "other_license"}}, "my_license", False),
+        ({"license": {"key": "other_license"}}, "wrong_license", False),}
     ])
     def test_has_license(self, repo, license_key, expected):
         """Test has_license returns True if license matches"""
@@ -98,14 +98,10 @@ class TestGithubOrgClient(unittest.TestCase):
         )
 
 
-@parameterized_class([
-    {
-        "org_payload": org_payload,
-        "repos_payload": repos_payload,
-        "expected_repos": expected_repos,
-        "apache2_repos": apache2_repos,
-    }
-])
+@parameterized_class(
+        ("org_payload", "repos_payload", "expected_repos", "apache2_repos",),
+        TEST_PAYLOAD
+)
 class TestIntegrationGithubOrgClient(unittest.TestCase):
     """Integration tests for GithubOrgClient.public_repos"""
 
