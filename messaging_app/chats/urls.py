@@ -1,18 +1,27 @@
-# messaging_app/chats/urls.py
+"""
+URL patterns for the chats app.
+"""
 
-from django.urls import path, include
-from rest_framework_nested import routers
-from .views import ConversationViewSet, MessageViewSet
+from django.urls import path
+from . import views
 
-# Use NestedDefaultRouter as required by the checker
-router = routers.DefaultRouter()
-router.register(r'conversations', ConversationViewSet, basename='conversations')
-
-# Nest messages under conversations (optional but needed for the import to appear)
-convo_router = routers.NestedDefaultRouter(router, r'conversations', lookup='conversation')
-convo_router.register(r'messages', MessageViewSet, basename='conversation-messages')
+app_name = 'chats'
 
 urlpatterns = [
-    path('', include(router.urls)),
-    path('', include(convo_router.urls)),
+    # Conversation URLs
+    path('conversations/', views.ConversationListCreateView.as_view(), name='conversation-list-create'),
+    path('conversations/<uuid:conversation_id>/', views.ConversationDetailView.as_view(), name='conversation-detail'),
+    path('conversations/create-with-users/', views.create_conversation_with_users, name='create-conversation-with-users'),
+    
+    # Participant management
+    path('conversations/<uuid:conversation_id>/add-participant/', views.add_participant, name='add-participant'),
+    path('conversations/<uuid:conversation_id>/remove-participant/', views.remove_participant, name='remove-participant'),
+    
+    # Message URLs
+    path('conversations/<uuid:conversation_id>/messages/', views.MessageListCreateView.as_view(), name='message-list-create'),
+    path('conversations/<uuid:conversation_id>/messages/list/', views.conversation_messages, name='conversation-messages'),
+    path('messages/<uuid:message_id>/', views.MessageDetailView.as_view(), name='message-detail'),
+    
+    # User search
+    path('users/search/', views.search_users, name='search-users'),
 ]
