@@ -5,6 +5,8 @@ from rest_framework.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import OrderingFilter, SearchFilter
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.status import HTTP_403_FORBIDDEN
 
 from .models import Conversation, Message
 from .serializers import ConversationSerializer, MessageSerializer
@@ -24,7 +26,7 @@ class ConversationViewSet(viewsets.ModelViewSet):
     Only participants can access conversation details.
     """
     serializer_class = ConversationSerializer
-    permission_classes = [IsConversationParticipant]
+    permission_classes = [IsAuthenticated, IsConversationParticipant]
     pagination_class = ConversationPagination
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_class = ConversationFilter
@@ -68,6 +70,12 @@ class ConversationViewSet(viewsets.ModelViewSet):
         Only existing participants can add new participants.
         """
         conversation = self.get_object()
+        if request.user not in conversation.participants.all():
+            return Response(
+                {'detail': 'You are not allowed to add participants to this conversation.'},
+                status=HTTP_403_FORBIDDEN
+        )
+
         user_id = request.data.get('user_id')
         
         if not user_id:
@@ -106,6 +114,12 @@ class ConversationViewSet(viewsets.ModelViewSet):
         Users can remove themselves, or existing participants can remove others.
         """
         conversation = self.get_object()
+        if str(user_id) != str(request.user.id) and request.user not in conversation.participants.all():
+            return Response(
+                {'detail': 'You are not allowed to remove participants from this conversation.'},
+                status=HTTP_403_FORBIDDEN
+            )
+
         user_id = request.data.get('user_id')
         
         if not user_id:
@@ -138,7 +152,7 @@ class MessageViewSet(viewsets.ModelViewSet):
     Includes pagination (20 messages per page) and comprehensive filtering.
     """
     serializer_class = MessageSerializer
-    permission_classes = [IsMessageOwnerOrParticipant, CanCreateMessage]
+    permission_classes = [IsAuthenticated, IsMessageOwnerOrParticipant, CanCreateMessage]
     pagination_class = MessagePagination
     filter_backends = [DjangoFilterBackend, OrderingFilter, SearchFilter]
     filterset_class = MessageFilter
@@ -173,8 +187,11 @@ class MessageViewSet(viewsets.ModelViewSet):
         
         # Check if user is participant of the conversation
         if not conversation.participants.filter(id=self.request.user.id).exists():
-            raise PermissionDenied("You are not a participant of this conversation")
-        
+            return Response(
+                {'detail': 'You are not a participant of this conversation.'},
+                status=HTTP_403_FORBIDDEN
+            )
+
         serializer.save(sender=self.request.user, conversation=conversation)
     
     def get_permissions(self):
@@ -234,7 +251,11 @@ class MessageViewSet(viewsets.ModelViewSet):
             
             # Check if user is participant
             if not conversation.participants.filter(id=request.user.id).exists():
-                raise PermissionDenied("You are not a participant of this conversation")
+                return Response(
+                    {'detail': 'You are not a participant of this conversation.'},
+                    status=HTTP_403_FORBIDDEN
+                )
+
             
             # Get messages for this conversation
             queryset = self.get_queryset().filter(conversation=conversation)
