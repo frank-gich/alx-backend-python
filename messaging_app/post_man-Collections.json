@@ -9,10 +9,15 @@
       "name": "Login - Get JWT Token",
       "request": {
         "method": "POST",
-        "header": [],
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"username\": \"your_username\",\n  \"password\": \"your_password\"\n}",
+          "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"securepassword\"\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -24,7 +29,19 @@
           "host": ["{{base_url}}"],
           "path": ["api", "token", ""]
         }
-      }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "var jsonData = pm.response.json();",
+              "pm.environment.set(\"jwt_token\", jsonData.access_token);"
+            ]
+          }
+        }
+      ]
     },
     {
       "name": "Create Conversation",
@@ -43,14 +60,26 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"title\": \"New Project Discussion\"\n}"
+          "raw": "{\n  \"title\": \"New Project Discussion\",\n  \"participant_ids\": [\"<replace-with-user-id-2>\", \"<replace-with-user-id-3>\"]\n}"
         },
         "url": {
           "raw": "{{base_url}}/api/chats/conversations/",
           "host": ["{{base_url}}"],
           "path": ["api", "chats", "conversations", ""]
         }
-      }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "var jsonData = pm.response.json();",
+              "pm.environment.set(\"conversation_id\", jsonData.id);"
+            ]
+          }
+        }
+      ]
     },
     {
       "name": "Add Participant to Conversation",
@@ -93,12 +122,12 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"conversation_id\": \"{{conversation_id}}\",\n  \"message_body\": \"Hello team!\"\n}"
+          "raw": "{\n  \"message_body\": \"Hello team!\"\n}"
         },
         "url": {
-          "raw": "{{base_url}}/api/chats/messages/",
+          "raw": "{{base_url}}/api/chats/conversations/{{conversation_id}}/messages/",
           "host": ["{{base_url}}"],
-          "path": ["api", "chats", "messages", ""]
+          "path": ["api", "chats", "conversations", "{{conversation_id}}", "messages", ""]
         }
       }
     },
@@ -137,7 +166,7 @@
       }
     },
     {
-      "name": "Unauthorized Access Test",
+      "name": "Unauthorized Access Test (Missing Token)",
       "request": {
         "method": "GET",
         "header": [],
@@ -147,20 +176,41 @@
           "path": ["api", "chats", "conversations", ""]
         }
       }
+    },
+    {
+      "name": "Unauthorized Access Test (Invalid Token)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer invalid_or_expired_token",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/chats/conversations/{{conversation_id}}/",
+          "host": ["{{base_url}}"],
+          "path": ["api", "chats", "conversations", "{{conversation_id}}", ""]
+        }
+      }
     }
   ],
   "variable": [
     {
       "key": "base_url",
-      "value": "http://127.0.0.1:8000"
+      "value": "http://127.0.0.1:8000",
+      "type": "string"
     },
     {
       "key": "jwt_token",
-      "value": ""
+      "value": "",
+      "type": "string"
     },
     {
       "key": "conversation_id",
-      "value": ""
+      "value": "",
+      "type": "string"
     }
   ]
 }
