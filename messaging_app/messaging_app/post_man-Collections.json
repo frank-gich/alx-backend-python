@@ -1,0 +1,166 @@
+{
+  "info": {
+    "name": "Messaging App API",
+    "description": "Postman collection to test authentication, conversation, and messaging APIs.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Login - Get JWT Token",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"your_username\",\n  \"password\": \"your_password\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/api/token/",
+          "host": ["{{base_url}}"],
+          "path": ["api", "token", ""]
+        }
+      }
+    },
+    {
+      "name": "Create Conversation",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{jwt_token}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"New Project Discussion\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/chats/conversations/",
+          "host": ["{{base_url}}"],
+          "path": ["api", "chats", "conversations", ""]
+        }
+      }
+    },
+    {
+      "name": "Add Participant to Conversation",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{jwt_token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"user_id\": \"<replace-with-user-id>\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/chats/conversations/{{conversation_id}}/add-participant/",
+          "host": ["{{base_url}}"],
+          "path": ["api", "chats", "conversations", "{{conversation_id}}", "add-participant", ""]
+        }
+      }
+    },
+    {
+      "name": "Send Message",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{jwt_token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"conversation_id\": \"{{conversation_id}}\",\n  \"message_body\": \"Hello team!\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/chats/messages/",
+          "host": ["{{base_url}}"],
+          "path": ["api", "chats", "messages", ""]
+        }
+      }
+    },
+    {
+      "name": "Fetch Messages (List)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{jwt_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/chats/conversations/{{conversation_id}}/messages/",
+          "host": ["{{base_url}}"],
+          "path": ["api", "chats", "conversations", "{{conversation_id}}", "messages", ""]
+        }
+      }
+    },
+    {
+      "name": "Fetch Conversations",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{jwt_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/chats/conversations/",
+          "host": ["{{base_url}}"],
+          "path": ["api", "chats", "conversations", ""]
+        }
+      }
+    },
+    {
+      "name": "Unauthorized Access Test",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/chats/conversations/",
+          "host": ["{{base_url}}"],
+          "path": ["api", "chats", "conversations", ""]
+        }
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://127.0.0.1:8000"
+    },
+    {
+      "key": "jwt_token",
+      "value": ""
+    },
+    {
+      "key": "conversation_id",
+      "value": ""
+    }
+  ]
+}
