@@ -8,6 +8,11 @@ from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.status import HTTP_403_FORBIDDEN
 
+from django.http import JsonResponse, HttpResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.decorators import login_required
+import json
+
 from .models import Conversation, Message
 from .serializers import ConversationSerializer, MessageSerializer
 from .permissions import (
@@ -326,3 +331,60 @@ class MessageViewSet(viewsets.ModelViewSet):
             'search_query': search_query,
             'results': serializer.data
         })
+
+# chats/views.py
+"""
+Sample views to test the middleware functionality.
+Add these to your Django app's views.py file.
+"""
+@csrf_exempt
+def chat_view(request):
+    """
+    Simple chat endpoint for testing middleware.
+    Accepts both GET and POST requests.
+    """
+    if request.method == 'GET':
+        return JsonResponse({
+            'message': 'Chat endpoint accessed successfully',
+            'user': request.user.username if request.user.is_authenticated else 'Anonymous',
+            'timestamp': str(request.GET.get('timestamp', 'No timestamp'))
+        })
+    
+    elif request.method == 'POST':
+        # Handle POST requests (chat messages)
+        message = request.POST.get('message', '')
+        
+        if not message:
+            try:
+                # Handle JSON data
+                data = json.loads(request.body.decode('utf-8'))
+                message = data.get('message', '')
+            except:
+                message = 'No message content'
+        
+        return JsonResponse({
+            'status': 'Message received',
+            'message': message,
+            'user': request.user.username if request.user.is_authenticated else 'Anonymous'
+        })
+
+@csrf_exempt
+def message_view(request):
+    """
+    Another endpoint for testing middleware.
+    """
+    return JsonResponse({
+        'endpoint': 'message',
+        'method': request.method,
+        'user': request.user.username if request.user.is_authenticated else 'Anonymous'
+    })
+
+def public_view(request):
+    """
+    Public endpoint that should not be restricted by role middleware.
+    """
+    return JsonResponse({
+        'message': 'This is a public endpoint',
+        'accessible': 'by everyone'
+    })
+
