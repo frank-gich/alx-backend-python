@@ -138,7 +138,7 @@ class OffensiveLanguageMiddleware(MiddlewareMixin):
         return False
 
 
-class RolePermissionMiddleware(MiddlewareMixin):
+class RolepermissionMiddleware(MiddlewareMixin):
     """
     Middleware that checks user roles and restricts access to admin/moderator only.
     """
