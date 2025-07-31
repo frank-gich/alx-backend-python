@@ -15,14 +15,12 @@ class MessageNotificationTests(TestCase):
         )
     
     def test_message_creates_notification(self):
-        # Create a message
         message = Message.objects.create(
             sender=self.sender,
             receiver=self.receiver,
             content="Test message"
         )
         
-        # Check if notification was created
         notification = Notification.objects.filter(
             user=self.receiver,
             message=message
@@ -35,14 +33,12 @@ class MessageNotificationTests(TestCase):
         self.assertTrue(notification.created_at <= timezone.now())
     
     def test_notification_not_created_for_sender(self):
-        # Create a message
         message = Message.objects.create(
             sender=self.sender,
             receiver=self.receiver,
             content="Test message"
         )
         
-        # Check that no notification was created for sender
         notification = Notification.objects.filter(
             user=self.sender,
             message=message
