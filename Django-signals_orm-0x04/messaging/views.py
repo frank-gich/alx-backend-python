@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.db import models
+from django.views.decorators.cache import cache_page
 from .models import Message, MessageHistory
 
 @login_required
@@ -27,6 +28,7 @@ def message_history(request, message_id):
     })
 
 @login_required
+@cache_page(60)  # Cache for 60 seconds
 def threaded_conversation(request, user_id):
     other_user = get_object_or_404(User, id=user_id)
     if request.user == other_user:
@@ -37,7 +39,9 @@ def threaded_conversation(request, user_id):
     ).filter(
         models.Q(sender=request.user, receiver=other_user) |
         models.Q(sender=other_user, receiver=request.user)
-    ).select_related('sender', 'receiver').prefetch_related('replies')
+    ).select_related('sender', 'receiver').prefetch_related('replies').only(
+        'id', 'content', 'timestamp', 'read', 'sender__username', 'receiver__username'
+    )
     
     return render(request, 'messaging/threaded_conversation.html', {
         'other_user': other_user,
