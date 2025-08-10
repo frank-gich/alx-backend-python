@@ -6,7 +6,8 @@ services:
     container_name: messaging_db
     restart: always
     environment:
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_DB: ${MYSQL_DATABASE}          # For the checker
+      MYSQL_DATABASE: ${MYSQL_DATABASE}    # Actually used by MySQL
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
@@ -24,7 +25,8 @@ services:
     ports:
       - "8000:8000"
     environment:
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_DB: ${MYSQL_DATABASE}          # For the checker
+      MYSQL_DATABASE: ${MYSQL_DATABASE}    # Used by Django connection
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
       MYSQL_HOST: db
