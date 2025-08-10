@@ -16,7 +16,7 @@ RUN pip install -r requirements.txt
 # Copy project files
 COPY . /app/
 
-# Expose port for Django
+# Expose port for Django (and reminder: run with -p 8000:8000)
 EXPOSE 8000
 
 # Command to run the app
