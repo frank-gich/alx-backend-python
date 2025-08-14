@@ -1,0 +1,32 @@
+#!/bin/bash
+# kurbeScript: Start a local Kubernetes cluster with Minikube
+# Requirements: minikube, kubectl
+
+set -e  # Exit if any command fails
+
+echo "=== Checking if Minikube is installed ==="
+if ! command -v minikube &> /dev/null; then
+    echo "Minikube is not installed. Installing..."
+    if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+        curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+        sudo install minikube-linux-amd64 /usr/local/bin/minikube
+    elif [[ "$OSTYPE" == "darwin"* ]]; then
+        brew install minikube
+    else
+        echo "Unsupported OS. Please install Minikube manually."
+        exit 1
+    fi
+else
+    echo "Minikube is already installed."
+fi
+
+echo "=== Starting Minikube cluster ==="
+minikube start
+
+echo "=== Verifying Kubernetes cluster info ==="
+kubectl cluster-info
+
+echo "=== Retrieving available pods in all namespaces ==="
+kubectl get pods --all-namespaces
+
+echo "=== Script complete! Your Kubernetes cluster is up and running ==="
