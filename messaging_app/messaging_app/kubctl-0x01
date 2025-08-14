@@ -1,0 +1,47 @@
+#!/bin/bash
+# kubctl-0x01: Scale Django app deployment, verify pods, load test, and monitor usage.
+
+set -e  # Exit if any command fails
+
+DEPLOYMENT_NAME="messaging-app-deployment"
+SERVICE_NAME="messaging-app-service"
+NAMESPACE="default"  # Change if your app runs in another namespace
+TARGET_PORT=8000
+
+echo "=== Scaling $DEPLOYMENT_NAME to 3 replicas ==="
+kubectl scale deployment "$DEPLOYMENT_NAME" --replicas=3 -n "$NAMESPACE"
+
+echo "=== Waiting for pods to be ready ==="
+kubectl rollout status deployment "$DEPLOYMENT_NAME" -n "$NAMESPACE"
+
+echo "=== Verifying running pods ==="
+kubectl get pods -n "$NAMESPACE" -o wide
+
+echo "=== Port-forwarding service to localhost:$TARGET_PORT for testing ==="
+kubectl port-forward service/"$SERVICE_NAME" $TARGET_PORT:$TARGET_PORT -n "$NAMESPACE" &
+PF_PID=$!
+sleep 5  # Wait for port-forward to start
+
+echo "=== Running load test with wrk ==="
+if ! command -v wrk &> /dev/null; then
+    echo "wrk is not installed. Please install wrk to run load testing."
+else
+    wrk -t4 -c20 -d10s http://127.0.0.1:$TARGET_PORT/
+fi
+
+kill $PF_PID
+
+echo "=== Monitoring resource usage of pods ==="
+if ! command -v kubectl &> /dev/null; then
+    echo "kubectl not found. Please install kubectl."
+    exit 1
+fi
+
+if ! kubectl top pods &> /dev/null; then
+    echo "kubectl top requires metrics-server to be installed."
+    echo "Install with: kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml"
+else
+    kubectl top pods -n "$NAMESPACE"
+fi
+
+echo "=== Done! ==="
