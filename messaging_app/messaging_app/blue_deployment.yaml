@@ -1,47 +1,25 @@
-#!/bin/bash
-# kubctl-0x03: Perform rolling update with zero downtime
-
-set -e
-NAMESPACE="default"
-DEPLOYMENT="messaging-app-blue"
-SERVICE="messaging-app-service"
-TARGET_PORT=8000
-
-echo "=== Applying updated deployment ==="
-kubectl apply -f blue_deployment.yaml -n "$NAMESPACE"
-
-echo "=== Starting rolling update ==="
-kubectl rollout status deployment "$DEPLOYMENT" -n "$NAMESPACE" --timeout=120s &
-
-ROLL_PID=$!
-
-echo "=== Starting downtime test ==="
-# Port-forward service to local machine
-kubectl port-forward service/$SERVICE $TARGET_PORT:$TARGET_PORT -n "$NAMESPACE" >/dev/null 2>&1 &
-PF_PID=$!
-
-sleep 3  # Wait for port-forward to be ready
-
-DOWNTIME=0
-START_TIME=$(date +%s)
-
-while kill -0 $ROLL_PID 2>/dev/null; do
-    if curl -s http://127.0.0.1:$TARGET_PORT/ >/dev/null; then
-        echo "$(date +%T) - App is responding"
-    else
-        echo "$(date +%T) - Downtime detected!"
-        DOWNTIME=$((DOWNTIME+1))
-    fi
-    sleep 1
-done
-
-END_TIME=$(date +%s)
-DURATION=$((END_TIME - START_TIME))
-
-kill $PF_PID
-
-echo "=== Rolling update completed in $DURATION seconds ==="
-echo "Downtime events detected: $DOWNTIME"
-
-echo "=== Verifying pods ==="
-kubectl get pods -n "$NAMESPACE" -o wide
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: messaging-app-blue
+  labels:
+    app: messaging-app
+    version: blue
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: messaging-app
+      version: blue
+  template:
+    metadata:
+      labels:
+        app: messaging-app
+        version: blue
+    spec:
+      containers:
+        - name: messaging-app
+          image: your-dockerhub-username/messaging-app:2.0  # Updated image version
+          ports:
+            - containerPort: 8000
+            
