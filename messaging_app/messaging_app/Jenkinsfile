@@ -1,11 +1,6 @@
 pipeline {
     agent any
 
-    tools {
-        // Use Python installation provided by ShiningPanda
-        python 'System-CPython-3.8'  // make sure Python is installed in Jenkins
-    }
-
     stages {
         stage('Checkout') {
             steps {
@@ -19,10 +14,10 @@ pipeline {
             steps {
                 sh '''
                 cd messaging_app
-                python -m venv venv
+                python3 -m venv venv
                 . venv/bin/activate
-                pip install --upgrade pip
-                pip install -r requirements.txt
+                pip3 install --upgrade pip
+                pip3 install -r messaging_app/requirements.txt
                 '''
             }
         }
@@ -44,6 +39,6 @@ pipeline {
     }
 
     triggers {
-        // Pipeline will only run manually unless you add SCM/cron triggers here
+        // Manual trigger only
     }
 }
