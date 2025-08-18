@@ -1,0 +1,49 @@
+pipeline {
+    agent any
+
+    tools {
+        // Use Python installation provided by ShiningPanda
+        python 'System-CPython-3.8'  // make sure Python is installed in Jenkins
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main',
+                    url: 'https://github.com/alx-backend-python/alx-backend-python.git',
+                    credentialsId: 'github-creds'
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                sh '''
+                cd messaging_app
+                python -m venv venv
+                . venv/bin/activate
+                pip install --upgrade pip
+                pip install -r requirements.txt
+                '''
+            }
+        }
+
+        stage('Run Tests') {
+            steps {
+                sh '''
+                cd messaging_app
+                . venv/bin/activate
+                pytest --junitxml=report.xml
+                '''
+            }
+            post {
+                always {
+                    junit 'messaging_app/report.xml'
+                }
+            }
+        }
+    }
+
+    triggers {
+        // Pipeline will only run manually unless you add SCM/cron triggers here
+    }
+}
