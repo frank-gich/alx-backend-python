@@ -42,6 +42,63 @@ jobs:
           source venv/bin/activate
           pip install --upgrade pip
           pip install -r requirements.txt
+          pip install flake8 coverage
+
+      - name: Run flake8 Lint
+        run: |
+          cd messaging_app
+          source venv/bin/activate
+          # Fail on any linting errors
+          flake8 . --max-line-length=100 --exit-zero
+        continue-on-error: false
+
+      - name: Wait for MySQL
+        run: |
+          sudo apt-get install -y mysql-client
+          until mysqladmin ping -h 127.0.0.1 --silent; do
+            echo "Waiting for MySQL..."
+            sleep 5
+          done
+
+      - name: Run migrations
+        env:
+          DB_NAME: test_db
+          DB_USER: test_user
+          DB_PASSWORD: test_pass
+          DB_HOST: 127.0.0.1
+        run: |
+          cd messaging_app
+          source venv/bin/activate
+          python manage.py migrate --noinput
+
+      - name: Run tests with coverage
+        env:
+          DB_NAME: test_db
+          DB_USER: test_user
+          DB_PASSWORD: test_pass
+          DB_HOST: 127.0.0.1
+        run: |
+          cd messaging_app
+          source venv/bin/activate
+          coverage run manage.py test
+          coverage xml
+          coverage html
+
+      - name: Upload coverage reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: |
+            messaging_app/coverage.xml
+            messaging_app/htmlcov/
+
+      - name: Install dependencies
+        run: |
+          cd messaging_app
+          python -m venv venv
+          source venv/bin/activate
+          pip install --upgrade pip
+          pip install -r requirements.txt
 
       - name: Wait for MySQL
         run: |
